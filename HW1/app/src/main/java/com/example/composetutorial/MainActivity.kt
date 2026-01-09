@@ -23,8 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.composetutorial.ui.theme.ComposeTutorialTheme
-import java.nio.file.WatchEvent
-
+import androidx.compose.foundation.border
+import androidx.compose.material3.MaterialTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,13 +50,19 @@ fun MessageCard(msg: Message){
             Modifier
                 .size(40.dp)
                 .clip(CircleShape)
+                .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
         )
         Spacer(Modifier.width(8.dp))
 
         Column {
-            Text(msg.author)
+            Text(msg.author,
+                color = MaterialTheme.colorScheme.secondary,
+                style = MaterialTheme.typography.titleSmall
+            )
             Spacer(Modifier.height(4.dp))
-            Text(msg.body)
+            Text(msg.body,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
