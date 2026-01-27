@@ -28,6 +28,7 @@ fun HomeScreen(navController: NavController){
     }
 }
 
+// This methode is partially created with ChatGPT
 @Composable
 fun ExitAppHandler(){
     val activity = LocalActivity.current as ComponentActivity
