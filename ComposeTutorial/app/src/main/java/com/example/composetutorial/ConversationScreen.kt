@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,14 +35,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.composetutorial.ui.theme.ComposeTutorialTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 data class Message(val author: String, val body: String)
 
 @Composable
-fun ConversationScreen(navController: NavController){
+fun ConversationScreen(navController: NavController, db: AppDatabase){
     Column (modifier = Modifier.fillMaxSize()) {
 
-        Conversation(SampleData.conversationSample, Modifier.weight(1f))
+        Conversation(SampleData.conversationSample, db, Modifier.weight(1f))
 
         Button(
             onClick = { navController.navigate(Home) },
@@ -56,7 +59,20 @@ fun ConversationScreen(navController: NavController){
 }
 
 @Composable
-fun MessageCard(msg: Message){
+fun MessageCard(msg: Message, db: AppDatabase){
+    var username by remember { mutableStateOf("Loading...") }
+    val userDataDao = db.userDataDao()
+
+    LaunchedEffect(Unit) {
+        username = withContext(Dispatchers.IO) {
+            try {
+                userDataDao.getUsername()
+            } catch (e: Exception) {
+                "fail to load"
+            }
+        }
+    }
+
     Row(Modifier.padding(all = 8.dp)){
         Image(
             painter = painterResource(R.drawable.profile_picture),
@@ -74,7 +90,7 @@ fun MessageCard(msg: Message){
         )
 
         Column (modifier = Modifier.clickable{ isExpanded = !isExpanded}) {
-            Text(msg.author,
+            Text(username,
                 color = MaterialTheme.colorScheme.secondary,
                 style = MaterialTheme.typography.titleSmall
             )
@@ -95,10 +111,10 @@ fun MessageCard(msg: Message){
 }
 
 @Composable
-fun Conversation(messages: List<Message>, modifier: Modifier = Modifier) {
+fun Conversation(messages: List<Message>, db: AppDatabase, modifier: Modifier = Modifier) {
     LazyColumn (modifier = modifier) {
         items(messages) {message ->
-            MessageCard(message)
+            MessageCard(message, db)
         }
     }
 }
@@ -107,7 +123,7 @@ fun Conversation(messages: List<Message>, modifier: Modifier = Modifier) {
 @Composable
 fun PreviewConversation() {
     ComposeTutorialTheme {
-        Conversation(SampleData.conversationSample)
+        //Conversation(SampleData.conversationSample)
     }
 }
 
@@ -121,7 +137,7 @@ fun PreviewConversation() {
 fun PreviewMessageCard() {
     ComposeTutorialTheme {
         Surface {
-            MessageCard(Message("Android", "Jetpack compose"))
+            //MessageCard(Message("Android", "Jetpack compose"))
         }
     }
 }

@@ -10,10 +10,10 @@ import kotlinx.serialization.Serializable
 @Serializable object Conversation
 
 @Composable
-fun MyAppNavigation(){
+fun MyAppNavigation(db: AppDatabase){
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Home) {
-        composable<Home> { HomeScreen(navController) }
-        composable<Conversation> { ConversationScreen(navController)}
+        composable<Home> { HomeScreen(navController, db) }
+        composable<Conversation> { ConversationScreen(navController, db)}
     }
 }
