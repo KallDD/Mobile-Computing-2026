@@ -1,6 +1,8 @@
 package com.example.composetutorial
 
 import android.content.res.Configuration
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
@@ -34,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
 import com.example.composetutorial.ui.theme.ComposeTutorialTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -74,14 +77,7 @@ fun MessageCard(msg: Message, db: AppDatabase){
     }
 
     Row(Modifier.padding(all = 8.dp)){
-        Image(
-            painter = painterResource(R.drawable.profile_picture),
-            contentDescription = "Contact profile picture",
-            Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
-        )
+        UserImage(db)
         Spacer(Modifier.width(8.dp))
 
         var isExpanded by remember { mutableStateOf(false) }
@@ -117,6 +113,34 @@ fun Conversation(messages: List<Message>, db: AppDatabase, modifier: Modifier = 
             MessageCard(message, db)
         }
     }
+}
+
+@Composable
+fun UserImage(db: AppDatabase){
+    var imageUri by remember { mutableStateOf("") }
+    val userDataDao = db.userDataDao()
+
+    LaunchedEffect(Unit) {
+        imageUri = withContext(Dispatchers.IO) {
+            try {
+                userDataDao.getImageUri() ?: ""
+            } catch (e: Exception) {
+                ""
+            }
+        }
+    }
+
+    val model = imageUri.ifEmpty { R.drawable.profile_picture }
+
+    AsyncImage(
+        model = model,
+        placeholder = painterResource(R.drawable.profile_picture),
+        contentDescription = null,
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
+    )
 }
 
 @Preview

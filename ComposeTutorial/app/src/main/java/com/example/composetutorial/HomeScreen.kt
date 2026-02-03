@@ -1,7 +1,6 @@
 package com.example.composetutorial
 
 import android.net.Uri
-import android.preference.PreferenceDataStore
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
@@ -17,8 +16,6 @@ import androidx.compose.runtime.*
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -27,19 +24,16 @@ import androidx.compose.material3.TextField
 import androidx.compose.ui.unit.*
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.room.util.convertByteToUUID
 import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.layout.ContentScale
+import java.io.File
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun HomeScreen(navController: NavController, db: AppDatabase){
@@ -49,7 +43,7 @@ fun HomeScreen(navController: NavController, db: AppDatabase){
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center){
         Text(text= "Home screen")
-        ImageInputUI()
+        ImageInputUI(db)
         TextInputUI(db)
         Button(onClick = { navController.navigate(Conversation) }) {
             Text(text = "Messages")
@@ -94,31 +88,71 @@ fun TextInputUI(db: AppDatabase){
     }
 }
 
+
+// AI has been used to figure out how to make the image picker from gallery and the saving
+// of the image in onResult is AI generated
 @Composable
-fun ImageInputUI(){
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+fun ImageInputUI(db: AppDatabase){
+    var imageUri by remember { mutableStateOf("") }
+    val userDataDao = db.userDataDao()
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = PickVisualMedia(),
-        onResult = { uri -> imageUri = uri }
+        onResult = { uri ->
+            if (uri != null) {
+                coroutineScope.launch {
+                    val newImagePath = withContext(Dispatchers.IO) {
+                        val imagesDir = File(context.filesDir, "images").apply { mkdirs() }
+                        val newFile = File(imagesDir, "profile_${System.currentTimeMillis()}.jpg")
+
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            newFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        } ?: return@withContext ""
+
+                        // (Optional) delete previous file if you store it
+                        val oldPath = runCatching { userDataDao.getImageUri() }.getOrNull()
+                        if (!oldPath.isNullOrBlank() && oldPath != newFile.absolutePath) {
+                            runCatching { File(oldPath).delete() }
+                        }
+
+                        userDataDao.updateImageUri(newFile.absolutePath)
+                        newFile.absolutePath
+                    }
+
+                    imageUri = newImagePath
+                }
+            }
+        }
     )
 
-    Row() {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(imageUri)
-                .crossfade(true)
-                .build(),
-            placeholder = painterResource(R.drawable.profile_picture),
-            contentDescription = null,
-            modifier = Modifier
-                .size(120.dp)
-                .clickable{pickerLauncher.launch(
-                    PickVisualMediaRequest(PickVisualMedia.ImageOnly)
-                )}
-        )
+    LaunchedEffect(Unit) {
+        imageUri = withContext(Dispatchers.IO) {
+            try {
+                userDataDao.getImageUri() ?: ""
+            } catch (e: Exception) {
+                ""
+            }
+        }
     }
 
+    val model = imageUri.ifEmpty { R.drawable.profile_picture }
+
+    AsyncImage(
+        model = model,
+        placeholder = painterResource(R.drawable.profile_picture),
+        contentDescription = null,
+        modifier = Modifier
+            .size(120.dp)
+            .clip(CircleShape)
+            .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
+            .clickable{pickerLauncher.launch(
+                PickVisualMediaRequest(PickVisualMedia.ImageOnly)
+            )}
+    )
     Spacer(Modifier.width(8.dp))
 }
 

@@ -1,5 +1,6 @@
 package com.example.composetutorial
 
+import android.net.Uri
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -14,10 +15,13 @@ interface UserDataDao {
     fun getUsername(): String
 
     @Query("SELECT imageUri FROM userdata LIMIT 1")
-    fun getImageUrl(): String
+    fun getImageUri(): String?
 
-    @Query("UPDATE UserData SET username = :username WHERE id = 0")
+    @Query("UPDATE userdata SET username = :username WHERE id = 0")
     fun updateUsername(username: String)
+
+    @Query("UPDATE userdata SET imageUri = :imageUri WHERE id = 0")
+    fun updateImageUri(imageUri: String)
 
     @Insert
     fun insertAll(vararg userdata: UserData)
