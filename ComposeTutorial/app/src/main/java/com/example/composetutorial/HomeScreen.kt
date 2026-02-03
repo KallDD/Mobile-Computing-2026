@@ -36,6 +36,10 @@ import coil3.request.crossfade
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun HomeScreen(navController: NavController, db: AppDatabase){
@@ -45,6 +49,7 @@ fun HomeScreen(navController: NavController, db: AppDatabase){
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center){
         Text(text= "Home screen")
+        ImageInputUI()
         TextInputUI(db)
         Button(onClick = { navController.navigate(Conversation) }) {
             Text(text = "Messages")
@@ -87,6 +92,34 @@ fun TextInputUI(db: AppDatabase){
             label = { Text("Username") },
         )
     }
+}
+
+@Composable
+fun ImageInputUI(){
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val pickerLauncher = rememberLauncherForActivityResult(
+        contract = PickVisualMedia(),
+        onResult = { uri -> imageUri = uri }
+    )
+
+    Row() {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(imageUri)
+                .crossfade(true)
+                .build(),
+            placeholder = painterResource(R.drawable.profile_picture),
+            contentDescription = null,
+            modifier = Modifier
+                .size(120.dp)
+                .clickable{pickerLauncher.launch(
+                    PickVisualMediaRequest(PickVisualMedia.ImageOnly)
+                )}
+        )
+    }
+
+    Spacer(Modifier.width(8.dp))
 }
 
 // This methode is partially created with ChatGPT
