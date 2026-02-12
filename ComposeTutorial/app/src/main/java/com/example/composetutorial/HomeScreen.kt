@@ -1,6 +1,8 @@
 package com.example.composetutorial
 
+import android.content.Context
 import android.net.Uri
+import android.widget.Space
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
@@ -32,28 +34,40 @@ import kotlinx.coroutines.withContext
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.HorizontalDivider
 import java.io.File
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.NotificationCompat
 
 @Composable
-fun HomeScreen(navController: NavController, db: AppDatabase){
+fun HomeScreen(navController: NavController, db: AppDatabase, context: Context){
     ExitAppHandler()
 
     Column (modifier = Modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center){
+
         Text(text= "Home screen")
         ImageInputUI(db)
-        TextInputUI(db)
-        Button(onClick = { navController.navigate(Conversation) }) {
-            Text(text = "Messages")
+        TextInputUI(db, context)
+
+        Spacer(Modifier.padding(16.dp))
+
+        Row() {
+            Button(onClick = { navController.navigate(Conversation) }) { //Tried usign popUpTo(Home) but it didn't work
+                Text(text = "Messages")
+            }
+            Spacer(Modifier.padding(16.dp))
+            Button(onClick = { navController.navigate(WeatherScreen) }) {
+                Text(text = "Weather")
+            }
         }
     }
 }
 
 // Found help from GeeksForGeeks
 @Composable
-fun TextInputUI(db: AppDatabase){
+fun TextInputUI(db: AppDatabase, context: Context){
     var text by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
     val userDataDao = db.userDataDao()
@@ -69,22 +83,26 @@ fun TextInputUI(db: AppDatabase){
         }
     }
 
-    Column( modifier = Modifier
-        .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Row( modifier = Modifier
+        .padding(8.dp),
     ){
         TextField(
             value = text,
             onValueChange = { newText ->
                 text = newText
-                // Save to database on background thread
-                coroutineScope.launch(Dispatchers.IO) {
-                    userDataDao.updateUsername(newText)
-                }
             },
             label = { Text("Username") },
         )
+        Button(
+            modifier = Modifier
+                .padding( horizontal = 8.dp),
+            onClick = {
+                coroutineScope.launch(Dispatchers.IO) {
+                    userDataDao.updateUsername(text)
+                }
+                NotificationHelper.sendActionNotification(context, "Username saved", "value = " + text)
+            })
+        { Text("Save")}
     }
 }
 
