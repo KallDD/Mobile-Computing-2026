@@ -26,6 +26,7 @@ interface WeatherDataDao {
     @Query("SELECT * FROM WeatherDataEntity ORDER BY id DESC LIMIT 1")
     suspend fun getLatestWeatherWithHourly(): WeatherWithHourly?
 
+    //chatGPT has helped with this
     @Transaction
     suspend fun insertWeatherAndHourly(
         weather: WeatherDataEntity,
