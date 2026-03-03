@@ -72,14 +72,17 @@ fun WeatherUI(db : AppDatabase, context: Context){
         dbWeather = newIds.getOrNull(index)?.let { weatherDataDao.getWeatherWithHourly(it) }
     }
 
+    //This launcher is chatGPT generated
     LaunchedEffect(Unit) {
-        dbWeather = withContext(Dispatchers.IO) {
+        val loaded = withContext(Dispatchers.IO) {
             try {
-                weatherDataDao.getLatestWeatherWithHourly()
-            } catch (e: Exception) {
-                null
+                loadIdsAndCurrent()
+                true
+            } catch (_: Exception) {
+                false
             }
         }
+        if (loaded && ids.isNotEmpty()) showApiWeather = false
     }
 
     Button(
@@ -103,11 +106,25 @@ fun WeatherUI(db : AppDatabase, context: Context){
         formatDbWeather(dbWeather)
     }
 
+    // Here I check if there is prev or next entry in database
+    val hasDb = ids.isNotEmpty()
+    val canPrev = hasDb && index < ids.lastIndex
+    val canNext = hasDb && index > 0
+
     Row() {
         Button(
             onClick = {
-                NotificationHelper.sendActionNotification(context, "Previous", "")
+                weatherScope.launch {
+                    if(canPrev){
+                        index++
+                        dbWeather = withContext(Dispatchers.IO) {
+                            weatherDataDao.getWeatherWithHourly(ids.get(index))
+                        }
+                    }
+                }
+                //NotificationHelper.sendActionNotification(context, "Previous", "")
             },
+            enabled = canPrev,
             modifier = Modifier
                 .padding(5.dp)
                 .weight(1f)
@@ -147,8 +164,17 @@ fun WeatherUI(db : AppDatabase, context: Context){
 
         Button(
             onClick = {
-                NotificationHelper.sendActionNotification(context, "Next", "")
+                weatherScope.launch {
+                    if(canNext){
+                        index--
+                        dbWeather = withContext(Dispatchers.IO) {
+                            weatherDataDao.getWeatherWithHourly(ids.get(index))
+                        }
+                    }
+                }
+                //NotificationHelper.sendActionNotification(context, "Next", "")
             },
+            enabled = canNext,
             modifier = Modifier
                 .padding(5.dp)
                 .weight(1f)
@@ -174,7 +200,6 @@ fun formatApiWeather(weatherData: WeatherData?){
         Text("No hourly data")
         return
     }
-
 
     val firstTimestamp = times.first()
     val date = firstTimestamp.substringBefore("T")
@@ -214,11 +239,16 @@ fun formatDbWeather(weatherData: WeatherWithHourly?) {
         return
     }
 
+    val id = weatherData.weather.id
     val firstTimestamp = hourlyList.first().time
     val date = firstTimestamp.substringBefore("T")
 
     Column(modifier = Modifier.padding(16.dp)) {
-
+        Text(
+            text = "Saved item id: $id",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = date,
             style = MaterialTheme.typography.titleLarge
