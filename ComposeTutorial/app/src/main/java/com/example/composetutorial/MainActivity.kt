@@ -38,11 +38,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         val db = Room.databaseBuilder(
             applicationContext,
-            AppDatabase::class.java, "userdata"
-        ).build()
+            AppDatabase::class.java, "appdata"
+        )
+        .fallbackToDestructiveMigration()
+        .build()
         
         // Initialize database with default values if empty
         CoroutineScope(Dispatchers.IO).launch {

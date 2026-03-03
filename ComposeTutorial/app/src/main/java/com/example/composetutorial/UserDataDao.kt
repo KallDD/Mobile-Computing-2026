@@ -8,19 +8,19 @@ import androidx.room.Query
 
 @Dao
 interface UserDataDao {
-    @Query("SELECT * FROM userdata")
+    @Query("SELECT * FROM UserData")
     fun getAll(): List<UserData>
 
-    @Query("SELECT username FROM userdata LIMIT 1")
+    @Query("SELECT username FROM UserData LIMIT 1")
     fun getUsername(): String
 
-    @Query("SELECT imageUri FROM userdata LIMIT 1")
+    @Query("SELECT imageUri FROM UserData LIMIT 1")
     fun getImageUri(): String?
 
-    @Query("UPDATE userdata SET username = :username WHERE id = 0")
+    @Query("UPDATE UserData SET username = :username WHERE id = 0")
     fun updateUsername(username: String)
 
-    @Query("UPDATE userdata SET imageUri = :imageUri WHERE id = 0")
+    @Query("UPDATE UserData SET imageUri = :imageUri WHERE id = 0")
     fun updateImageUri(imageUri: String)
 
     @Insert

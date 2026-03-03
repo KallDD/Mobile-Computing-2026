@@ -19,6 +19,6 @@ fun MyAppNavigation(db: AppDatabase, context: Context, startDestination: Any = H
     NavHost(navController = navController, startDestination = startDestination) {
         composable<Home> { HomeScreen(navController, db, context) }
         composable<Conversation> { ConversationScreen(navController, db)}
-        composable<WeatherScreen>{ WeatherScreen(navController)}
+        composable<WeatherScreen>{ WeatherScreen(context, db, navController)}
     }
 }
