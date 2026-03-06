@@ -29,14 +29,22 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.activity.viewModels
 
 public const val CHANNEL_ID = "general_notifications"
 public const val EXTRA_START_DESTINATION = "extra_start_destination"
 class MainActivity : ComponentActivity() {
     private val PERMISSION_REQUEST_CODE = 666
+    private val viewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installSplashScreen().apply {
+            setKeepOnScreenCondition {
+                !viewModel.isReady.value
+            }
+        }
         enableEdgeToEdge()
 
         val db = Room.databaseBuilder(

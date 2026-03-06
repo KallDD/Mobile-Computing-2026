@@ -29,3 +29,90 @@ if(canPrev){
     }
 }
 ```
+
+### Splash Screen
+The spalsh screen is made utilizing ```androidx.core:core-splashscreen:1.0.0```
+#### Replacing the default splash screen
+Setting my splash over the default android is done with ```themes.xml``` and ```AndroidManifest.xml```. I added a new style to the ```themes.xml``` file that uses itmes provided by ```androidx.core:core-splashscreen:1.0.0```
+```
+<style name="Theme.App.Starting" parent="Theme.SplashScreen">
+
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/animated_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.ComposeTutorial</item>
+
+    </style>
+```
+The items are pretty much self explanotary, but I will ellaborate more for the sace of this report.
+
+```<item name="windowSplashScreenBackground">@color/white</item>``` This line defines the background color of the splash screen. It could be a drawable resource like in the default splash screen.
+
+```<item name="windowSplashScreenAnimatedIcon">@drawable/animated_logo</item>``` This item is the animated logo which requires and logo recource that can contain animations. How my app logo is animated is explaind in detail down below.
+
+```<item name="postSplashScreenTheme">@style/Theme.ComposeTutorial</item>``` This item is what style will be used after the splach screen. My app changes back to the default style.
+
+Inside the android manifest the main activity theme is set to the added splash screen style ```Theme.App.Starting```. 
+
+```
+android:theme="@style/Theme.App.Starting">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.App.Starting">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+```
+
+#### Logo
+The logi an svg logo from androidsuriods own svg bank. This was the cleanest way to get a professional looking logo with out spending too much time on creating the image my self.
+#### Logo Animation
+The logo animation is created by making another drawable recourse of type ```animated-vector```. This resource is given the original unanimated svg as a "parameter" ```(android:drawable="@drawable/logo")```. Then a target is defined with the animation and which part of the logo will be animated. 
+``` 
+<target
+        android:animation="@animator/logo_animator"
+        android:name="animationGroup"/>
+```
+The animationGroup refers to the original logo drawable xml file which I added a group with name animationGroup.
+
+```
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
+    <group
+        android:name="animationGroup"
+        android:pivotY="12"
+        android:pivotX="12">
+        <path
+            android:fillColor="@android:color/white"
+            android:pathData="M19.35,...."/>
+    </group>
+</vector>
+```
+The "@animator/logo_animator" refers to a animator recourse that contains the actual animation(movement) of the logo.
+```
+<?xml version="1.0" encoding="utf-8"?>
+<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="4000">
+
+    <propertyValuesHolder
+        android:propertyName="translateX"
+        android:valueType="floatType"
+        android:valueFrom="-10"
+        android:valueTo="0"/>
+
+    <propertyValuesHolder
+        android:propertyName="scaleX"
+        android:valueType="floatType"
+        android:valueFrom="0.0"
+        android:valueTo="0.4"/>
+
+    <propertyValuesHolder
+        android:propertyName="scaleY"
+        android:valueType="floatType"
+        android:valueFrom="0.0"
+        android:valueTo="0.4"/>
+</objectAnimator>
+
+```
